@@ -1,0 +1,55 @@
+set %cindex #jindex
+set %je #JINDEX
+loop:
+while %cindex < #jindex
+      {
+       wait 10
+       set %cindex #JINDEX
+       set %js %je + 1
+       set %je #jindex
+       for %j %js %je
+	         {
+            scanjournal %j
+	          set %cjournal #JOURNAL
+	          if #JCOLOR = 1584
+               {
+		            gosub getSpeaker
+		            gosub getMessage
+		            execute cmd.exe /c bash webhook.sh " , %speaker , " " , %text , "
+                }
+           }
+       }
+goto loop
+
+sub getSpeaker
+str pos %cjournal :
+set %cut #STRRES - 1
+str left %cjournal %cut
+set %speaker #STRRES
+repeat
+       {
+        str Pos %speaker _
+        str Ins %speaker #spc #strRes
+        set %speaker #strRes
+        str Pos %speaker _
+        str Del %speaker #strRes 1
+        set %speaker #strRes
+        }
+until _ notIn %speaker
+return
+sub getMessage
+str len %cjournal
+set %cut2 #STRRES - %cut - 1
+str right %cjournal %cut2
+set %text #STRRES
+repeat
+       {
+        str Pos %text _
+        str Ins %text #spc #strRes
+        set %text #strRes
+        str Pos %text _
+        str Del %text #strRes 1
+        set %text #strRes
+        }
+until _ notIn %text
+return

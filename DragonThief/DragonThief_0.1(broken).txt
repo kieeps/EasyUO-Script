@@ -1,0 +1,162 @@
+gosub SetUpTargets
+gosub CheckEquipment
+
+
+loop:
+for %dr 1 %dragons
+    {
+     gosub Snoop %dr
+     gosub steal
+    }
+gosub Organize
+goto loop
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; SUBS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sub SetUpTargets
+display yesno Set up new targets?
+if #dispRes = yes
+   {
+    execute cmd.exe /c del #CHARNAME , _IDs.txt
+    gosub DefineBag
+    gosub PickVic
+   }
+   else
+   {
+    call #CHARNAME , _Conf.txt
+   }
+set %BagString %SaveBag , _HND
+ignoreitem %BagString 1
+return
+
+sub CheckEquipment
+finditem KKH C_ , #CHARID
+if #FINDCNT > 0
+   {
+		set %GloveID #FINDID
+		set %GloveType #FINDTYPE
+   }
+   else
+   {
+	  display Equip thief's gloves and try again.
+	  halt
+   }
+return
+
+sub Snoop
+SnoopLoop:
+set #LOBJECTID %GloveID
+set #LOBJECTTYPE %GloveType
+set %LContID #CONTID
+set #LTARGETID %Dragon , %1
+set #LTARGETKIND %DragonKind
+
+event macro 17 0 ;last object
+target 1s
+set %JSnoopB #JINDEX
+event macro 22 0 ;last target
+wait 5
+set %JSnoopE #JINDEX
+for %JSnoopI %JSnoopB %JSnoopE
+    {
+     scanJournal %JSnoopI
+     if you_must_wait_some_time in #journal
+        {
+         wait 1s
+         scanjournal 1
+         goto SnoopLoop
+        }
+    }
+wait 6s
+if #CONTID = %LContID
+   {
+    goto SnoopLoop
+   }
+set %DragonContID #CONTID
+return
+
+
+sub Steal
+repeat
+{
+finditem POF_ C_ , %DragonContID
+if #FINDCNT > 0
+   {
+    event sysmessage Stealing the gold
+    set #LTARGETID #FINDID
+	  event macro 13 33 ;steal
+	  target 1s
+	  event macro 22 0 ;ltarget
+	  wait 10s
+   }
+}
+until #FINDCNT = 0
+}
+repeat
+{
+finditem RWF C_ , %DragonContID
+if #FINDCNT > 0
+   {
+    event sysmessage Stealing Arrows
+    set #LTARGETID #FINDID
+	  event macro 13 33 ;steal
+	  target 1s
+	  event macro 22 0 ;ltarget
+	  wait 10s
+   }
+}
+until #FINDCNT = 0
+return
+
+sub Organize
+repeat
+      {
+       finditem POF_RWF C_ , #BACKPACKID
+       if #findcnt > 0
+          {
+           Exevent Drag #findid #findstack
+           wait 10
+           Exevent Dropc %SaveBag
+          }
+       }
+until #FINDCNT = 0
+return
+
+
+sub DefineBag
+event macro 8 7
+event sysmessage Select bag to save valuables in.
+set #TARGCURS 1
+While #TARGCURS = 1
+{
+  Wait 0
+}
+execute cmd.exe /c echo set % , saveBag #LTARGETID >> #CHARNAME , _IDs.txt
+return
+
+sub PickVic
+event sysmessage Select one of the dragons.
+Set #TARGCURS 1
+While #TARGCURS = 1
+{
+  Wait 0
+}
+set %DragonKind #LTARGETKIND
+set %DragonID #LTARGETID
+finditem %DragonID
+set %ignoreDragon
+set %dragonCnt 0
+repeat
+{
+set %dragonCnt %dragonCnt + 1
+ignoreitem reset 2
+ignoreitem %ignoreDragon 2
+finditem #findType
+set %ignoreDragon %ignoreDragon , _ , #findid
+execute cmd.exe /c echo set % , dragon , %dragonCnt #findid >> #CHARNAME , _IDs.txt
+}
+until #findcnt = 0
+execute cmd.exe /c echo set % , dragons %dragonCnt >> #CHARNAME , _IDs.txt
+event sysmessage found %dragonCnt dragons, make sure all of them are reachable.
+return
