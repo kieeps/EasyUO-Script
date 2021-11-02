@@ -1,0 +1,122 @@
+;;;;;;;;;;;;;;;;;;;;;;;;; CONFIG ;;;;;;;;;;;;;;;;;;;;;;;;;
+set %corpse xxx  ;The TYPE of the corpse
+set %vic xxx  ; The TYPE of the Animal to tame
+;;;;;;;;;;;;;;;;;;;;;;;;; BODY ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+gosub setup
+loop:
+gosub waitForVic
+gosub tameVic
+gosub release
+gosub waitForCorpse
+gosub ress
+
+sub waitForVic
+repeat
+	{
+	finditem %vic G_2 
+	wait 5
+	}
+until #FINDCNT > 0
+return
+
+sub tameVic
+event macro 52 1
+retry:
+set %jt1 #JINDEX
+event macro 13 35
+target
+if #TARGCURS = 1
+	{
+	repeat
+		{
+		event macro 55
+		}
+	until #TARGCURS = 0
+	}
+wait 210
+set %jt2 #JINDEX
+set %tamed false
+set %att 1
+while %tamed false || %att >= 5
+	{
+	for %jti %jt1 %jt2
+		{
+		scanjournal %jti
+		wait 5
+		if successfully in #JOURNAL
+			{
+			set %tamed true
+			}
+			else
+			{
+			set %att %att + 1
+			}
+		}
+	}
+
+sub release
+if %tamed = true
+	{
+	msg all release$
+	}
+return
+
+sub waitForCorpse
+repeat
+	{
+	finditem %corpse G_2
+	wait 5
+	}
+until #FINDCNT > 0
+return
+
+sub ress
+retryress:
+finditem ZLF #BACKPACKID
+if #FINDCNT > 0
+	{
+	set #LOBJECTID #FINDID
+	event macro 17
+	target
+	if #TARGCURS = 1
+		{
+		repeat
+			{
+			event macro 22
+			}
+		until #TARGCURS = 0
+		}
+	}
+wait 210
+finditem %corpse G_2
+if #FINDCNT > 0
+	{
+	goto retryress
+	}
+	else
+	{
+	set *killit true
+	}
+return
+
+sub setup
+repeat
+	{
+	event macro 56
+	scanjournal 1
+	wait 10
+	}
+until on in #journal
+if *waitForKiller = true
+	{
+	event sysmessage Start the Killer script.
+	}
+while *waitForKiller = true
+	{
+	wait 0
+	}
+set *waitForKiller true
+return
+	
+	
+ 

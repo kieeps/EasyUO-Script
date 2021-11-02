@@ -1,0 +1,95 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; USER SETTINGS ;:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+set %mageryMax 1300
+
+
+set %medDelay #systime
+loop:
+gosub checkMagery
+gosub checkMana
+gosub doMagery
+goto loop
+
+
+sub checkMagery
+chooseSkill Mage
+if #SKILL <= %mageryMax
+   {
+    if #SKILL <= 10
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL <= 20
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL <= 30
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL <= 40
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL <= 50
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL <= 60
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL <= 70
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL <= 80
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL <= 90
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL <= 100
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL <= 110
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+   }
+   else
+   {
+    halt
+   }
+return
+
+gosub checkMana
+if %manaCost > #MANA
+   {
+    while #MAXMANA <> #MANA
+          {
+           if %medDelay < #SYSTIME
+              {
+               event macro 13 46
+               wait 10
+               set %medDelay #SYSTIME + 10000
+              }
+          }
+   }
+return
+
+
+

@@ -1,0 +1,49 @@
+set %axeID JJOTNOD
+set %spot 3
+loop:
+for %lj 1 24
+	{
+	set %thereiswood true
+	while %thereiswood = true
+		{
+	    set %ljindex1 #JINDEX
+	    set #LOBJECTID %axeID
+	    event macro 17
+	    target
+	    if #TARGCURS = 1
+			{
+			repeat
+				{
+				event sysmessage Round %lj
+				msg -macro LJ\LJ , %spot , \ , %lj $
+				wait 5
+				}
+			until #TARGCURS = 0
+			}
+  set %stopwait false
+  set %failsafe #SYSTIME + 10000
+  while %stopwait = false
+        {
+        for %wi 1 4
+            {
+            scanjournal %wi
+            if You_stop_lumberjacking in #Journal || #SYSTIME > %failsafe
+               {
+                set %stopwait true
+               }
+            }
+        }
+        wait 10
+		set %ljindex2 #JINDEX
+		for %jj %ljindex1 %ljindex2
+			{
+			scanjournal %jj
+			if no_wood_left in #journal
+				{
+				set %thereiswood false
+				}
+			}
+		}
+	}
+goto loop
+

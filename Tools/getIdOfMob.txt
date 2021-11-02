@@ -1,0 +1,9 @@
+set #TARGCURS 1
+while #TARGCURS = 1
+	{
+	wait 0
+	}
+finditem #LTARGETID
+event sysmessage Mob ID is #FINDID
+event sysmessage Mob Type is #FINDTYPE
+halt

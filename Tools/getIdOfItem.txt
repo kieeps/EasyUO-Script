@@ -1,0 +1,7 @@
+set #TARGCURS 1
+while #TARGCURS = 1
+	{
+	wait 0
+	}
+event sysmessage the ItemID is #LTARGETID 
+halt

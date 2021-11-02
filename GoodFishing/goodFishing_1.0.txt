@@ -1,0 +1,364 @@
+
+;;;;;;;;;;;;;;;;;;;;;;;;;; USER CONFIG ;;;;;;;;;;;;;;;;;;;;;;;;;;
+set %tracking false ; true = use Tracking
+set %waterfile #CHARNAME , _ , Water.txt	;name of file to store water tile list in
+set %settings #CHARNAME , _ , Settings.txt
+
+;;;;;;;;;;;;;;;;;;;;;;;;;; Static Settings ;;;;;;;;;;;;;;;;;;;;;;
+set %searchrange 5  		;how many tiles in each direction to look for water in
+set %max_water 50			;stop searching for water when this amount has been found (does not apply to loaded files)
+set %fishingPoleType XHF
+set %daggerType TSF
+set %tilename water
+set %start_time #SYSTIME
+set %trackDelay #SYSTIME
+set %fishDelay #SYSTIME
+
+set %True true
+set %False false
+
+;;;;;;;;;;;;;;;;;;;;;;;;;; Water Settings ;;;;;;;;;;;;;;;;;;;;;;;
+; Just for clarification...
+set %watercnt 0 			;number of water tiles in the array
+set %watercntinvalid 0 		;number of invalid water tiles, terminate when this is equal to watercnt
+; Below is an example of the variables initialized for the first water tile,
+; All water tiles in the array will have these parameters.
+set %waterx0 0 				;x pos of first water tile
+set %watery0 0 				;y pos of first water tile
+set %waterz0 0 				;z pos of first water tile
+set %watertype0 0 			;type of first water tile
+set %watervalid0 true 		;whether first water tile is valid
+set %currentwater -1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;; Loop ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+msg .autoloop 1$
+gosub findpoleOnChar
+gosub findDaggerOnChar
+gosub setupBag
+gosub init_water
+
+
+loop:
+gosub tracking
+gosub get_water
+gosub fish
+gosub organize
+goto loop
+
+
+	;****** FISH SUBROUTINE **************
+	sub fish
+	while #SYSTIME < %fishDelay
+	{
+  wait 0
+  }
+	set #lobjectid %fishingPoleId
+	event macro 17 0 			;last object
+	target 20
+	set #LTARGETX %waterx . %currentwater
+	set #LTARGETY %watery . %currentwater
+	set #LTARGETZ %waterz . %currentwater
+	;set #LTARGETTILE %watertype . %currentwater
+	set #LTARGETKIND 3 			;resource
+	event macro 22 0 			;last target
+	; try to check journal for failure
+	wait 10 ;wait 0.5s for journal to update
+	; scan the last 3 lines and concatenate them
+	scanjournal 1
+	set %journalstring #journal
+	scanjournal 2
+	set %journalstring %journalstring , #spc , #journal
+	scanjournal 3
+	set %journalstring %journalstring , #spc , #journal
+	scanjournal 4
+	set %journalstring %journalstring , #spc , #journal
+	scanjournal 5
+	set %journalstring %journalstring , #spc , #journal
+	if how_to_use_those in %journalstring || see_that in %journalstring
+	{
+		event sysmessage Cannot fish here, invalidating: %currentwater
+		set %watervalid . %currentwater false
+		set %watercntinvalid %watercntinvalid + 1
+		set %valid_water %watercnt - %watercntinvalid
+		event sysmessage Valid spots left: %valid_water
+		goto end_fish
+	}
+	if get_any_fish_here in %journalstring ;no more fishies here
+	{
+		event sysmessage No more fish here, going to next tile.
+		set %currentwater %currentwater + 1
+		goto end_fish
+	}
+	if loop notin %journalstring
+	{
+		event sysmessage Failed to fish, going to next tile.
+		set %currentwater %currentwater + 1
+		goto end_fish
+	}
+	end_fish:
+	set %fishDelay #SYSTIME + 4000
+	return
+
+	;******FIND FISHING POLE SUBROUTINE***********
+	; Finds fishing pole in paperdoll, halts if none were found
+	sub findpoleOnChar
+	;first search paper doll (container #CHARID)
+	finditem %fishingPoleType C_ , #CHARID
+	if #findcnt > 0
+	{
+		set %fishingPoleId #FINDID
+	}
+	else
+	{
+	finditem %fishingPoleType c_ , #BACKPACKID
+	if #FINDCNT > 0
+		{
+		 set %fishingPoleId #FINDID
+		 Exevent Drag #findid #findstack
+		 wait 10
+		 Exevent Droppd
+		}
+		else
+		{
+		event sysmessage you need a Fishingpole equiped or in you backpack to fish...
+		halt
+		}
+	}
+return
+
+	;******FIND DAGGER SUBROUTINE***********
+	; Finds dagger in paperdoll, halts if none were found
+	sub findDaggerOnChar
+	finditem %daggerType C_ , #CHARID
+	if #findcnt > 0
+		{
+		 set %daggereId #FINDID
+		 Exevent Drag #findid #findstack
+		 wait 10
+		 Exevent Dropc #BACKPACKID
+		}
+		else
+		{
+		finditem %daggerType C_ , #BACKPACKID
+		if #findcnt > 0
+			{
+			 set %daggereId #FINDID
+			}
+		}
+	return
+
+	sub setupBag
+	display yesno Set up new organizer bag?
+	if #dispRes = yes
+		{
+		set #TARGCURS 1
+		target
+		while #TARGCURS = 1
+			{
+			wait 0
+			}
+			Set %SaveBag #LTARGETID
+			execute cmd.exe /c
+			+ del %settings &&
+			+ echo set % , SaveBag %SaveBag >> %settings
+		}
+		else
+		{
+		call %settings
+		}
+	return
+
+	;******* GET WATER SUBROUTINE *************
+	; Checks for suitable water and moves to it
+	sub get_water
+	if %currentwater = %watercnt
+	{
+		set %currentwater %waterscnt / 2
+		set %currentwater 0
+	}
+	if %watercntinvalid = %watercnt
+	{
+		event sysmessage All water tiles are bad, terminating.
+		gosub stop
+	}
+	if %watervalid . %currentwater = false || %currentwater = -1
+	{
+		;Current water tile needs to change
+		event sysmessage Checking next water tile...
+		set %currentwater %currentwater + 1
+		gosub get_water
+	}
+	return
+
+	;******* INIT WATER SUBROUTINE ********
+	sub init_water
+	set %watercnt 0
+	display yesno Scan for new water tiles?$$Press No to load from file %waterfile
+	if #dispRes = yes
+	{
+		display Water tiles within %searchrange will be scanned, this will take a while.$
+		+All water tiles will be stored in %waterfile , #dot $
+		+If %waterfile already exists it will be renamed %waterfile , #dot , old.
+		set %maxidx %searchrange * 2
+		event sysmessage Initializing water tile list...
+		execute cmd.exe /c copy %waterfile %waterfile , #dot , old
+		execute cmd.exe /c type nul > %waterfile
+		Tile init
+		set %xpos #charposx - %searchrange
+		set %ypos #charposy - %searchrange
+		for %i 0 %maxidx
+		{
+			;x traversing loop
+			for %j 0 %maxidx
+			{
+				;y traversing loop
+				;check tile at current pos for water
+				set %curx ( %xpos + %i )
+				set %cury ( %ypos + %j )
+				tile cnt %curx %cury ;count layers
+				for %cnt 1 #tileCnt
+				{
+					tile Get %curx %cury %cnt
+					;event sysmessage tile layer %cnt :   name : #tilename  flags : #tileflags
+					if water in #tilename
+					{
+						; found water tile
+						event sysmessage Found water number %watercnt
+						set %waterx . %watercnt %curx
+						set %watery . %watercnt %cury
+						;set %waterz . %watercnt #TILEZ
+						set %watertype . %watercnt #TILETYPE
+						set %watervalid . %watercnt true
+						tile Get %curx %cury #tileCnt ;get top-most layer for z
+						set %waterz . %watercnt #TILEZ
+						set %cnt #tileCnt ;to end loop
+
+						;write to file
+						execute cmd.exe /c
+						+ echo set % , waterx . %watercnt %waterx . %watercnt >> %waterfile &&
+						+ echo set % , watery . %watercnt %watery . %watercnt >> %waterfile &&
+						+ echo set % , waterz . %watercnt %waterz . %watercnt >> %waterfile &&
+						+ echo set % , watertype . %watercnt %watertype . %watercnt >> %waterfile &&
+						+ echo set % , watervalid . %watercnt true >> %waterfile
+
+						set %watercnt %watercnt + 1
+						if %watercnt = %max_water
+							goto end_init_water
+					}
+				}
+			}
+		}
+		end_init_water:
+		execute cmd.exe /c echo set % , watercnt %watercnt >> %waterfile
+		event sysmessage Water tile list complete!
+	}
+	else
+	{
+		call %waterfile
+		event sysmessage Found %watercnt water in file.
+		if %watercnt > 0
+		{
+			event sysmessage Water tile list complete!
+		}
+		else
+		{
+			event sysmessage Invalid water tile list file %waterfile , #dot
+			gosub init_water
+		}
+	}
+	return
+
+	;******* INIT TARGETS SUBROUTINE*******
+	sub tracking
+	if %tracking = true && %trackDelay > #SYSTIME
+	{
+		event macro 13 38 ;use tracking
+		wait 10
+		scanjournal 1
+		set %journalstring #journal
+		scanjournal 2
+		set %journalstring %journalstring , #spc , #journal
+		scanjournal 3
+		set %journalstring %journalstring , #spc , #journal
+		scanjournal 4
+		set %journalstring %journalstring , #spc , #journal
+		if creature notin %journalstring && must_wait_to_perform notin %journalstring
+		{
+			if action notin %journalstring
+			{
+				wait 10
+				; right click the center of last gump
+				set %posx #contposx + ( #contsizex / 2 )
+				set %posy #contposy + ( #contsizey / 2 )
+				;event sysmessage right clicking %posx %posy
+				click %posx %posy r dmc
+			}
+		}
+	 set %trackDelay #SYSTIME + 10000
+	}
+	return
+
+	sub organize
+	;find yellow fish
+	set #findcnt 1
+	repeat
+		{
+		finditem FQD C_ , #BACKPACKID
+		if #findcnt > 0
+			{
+			Exevent Drag #findid #findstack
+			wait 10
+			Exevent Dropc %saveBag
+			}
+		}
+	until #FINDCNT = 0
+	; Find Magic Fish
+	set #findcnt 1
+	repeat
+		{
+		finditem YDF C_ , #BACKPACKID
+		if #findcnt > 0
+			{
+			Exevent Drag #findid #findstack
+			wait 10
+			if #FINDCOL = 9 || #FINDCOL = 1001 || #FINDCOL = 91
+				{
+				Exevent Dropc %saveBag
+				}
+				else
+				{
+				Exevent Dropg #charposx #charposy #charposz
+				}
+			}
+		}
+	until #FINDCNT = 0
+	; Find Nets
+	set #findcnt 1
+	repeat
+		{
+		finditem UDF C_ , #BACKPACKID
+		if #findcnt > 0
+			{
+			Exevent Drag #findid #findstack
+			wait 10
+			Exevent Dropc %saveBag
+			}
+		}
+	until #FINDCNT = 0
+
+	; Find Trash and drop it
+	set #findcnt 1
+	repeat
+		{
+		finditem UDF_IEF_EQD_GQD_DQD_RVH_XDF_YWF_AXF_ZWF_KXF_KXF_XWF C_ , #BACKPACKID
+		if #findcnt > 0
+			{
+			Exevent Drag #findid #findstack
+			wait 10
+			Exevent Dropg #charposx #charposy #charposz
+			}
+		}
+	until #FINDCNT = 0
+	return
+halt
+

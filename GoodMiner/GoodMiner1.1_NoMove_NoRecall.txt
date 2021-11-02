@@ -1,0 +1,47 @@
+msg .autoloop 1$
+loop:
+for %x 0 4
+    {
+     for %y 0 4
+         {
+          for %i 1 2
+              {
+               set %i 1
+               set %minex #charposx + 2 - %x
+               set %miney #charposy + 2 - %y
+               finditem TWF C_ , #BACKPACKID
+               if #findcnt > 0
+                  {
+                   set #LOBJECTID #FINDID
+                   set #LTARGETX %minex
+                   set #LTARGETY %miney
+                   set #LTARGETZ 0
+                   set #LTARGETKIND 2
+                   event macro 17
+                   target
+                   set %jstart #JINDEX
+                   while #TARGCURS = 1
+                         {
+                          event macro 22
+                          wait 10
+                         }
+                   wait 7s
+                   set %jend #JINDEX
+                   for %j %jstart %jend
+                       {
+                        scanjournal %j
+                        if no_ore_left_there in #journal || too_far_away in #journal
+                           {
+                            set %i 3
+                           }
+                        }
+                   }
+                   else
+                   {
+                   event sysmessage You need shovels!
+                   halt
+                   }
+               }
+         }
+     }
+goto loop

@@ -1,0 +1,90 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; USER SETTINGS ;:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+set %mageryMax 900
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; STATIC SETTINGS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+set %medDelay #systime
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; LOOP ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+loop:
+gosub checkMagery
+gosub checkMana
+gosub doMagery
+goto loop
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; SUBS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sub checkMagery
+chooseSkill Mage
+if #SKILL <= %mageryMax
+   {
+    if #SKILL <= 10
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL <= 20
+       {
+        set %EMNumber 8
+        set %manaCost 6
+       }
+    if #SKILL <= 30
+       {
+        set %EMNumber 19
+        set %manaCost 9
+       }
+    if #SKILL <= 40
+       {
+        set %EMNumber 29
+        set %manaCost 11
+       }
+    if #SKILL <= 50
+       {
+        set %EMNumber 37
+        set %manaCost 14
+       }
+    if #SKILL <= 60
+       {
+        set %EMNumber 43
+        set %manaCost 20
+       }
+    if #SKILL <= 70
+       {
+        set %EMNumber 50
+        set %manaCost 40
+       }
+    if #SKILL <= 80
+       {
+        set %EMNumber 58
+        set %manaCost 50
+       }
+   }
+   else
+   {
+    halt
+   }
+return
+
+gosub checkMana
+if %manaCost > #MANA
+   {
+    while #MAXMANA <> #MANA
+          {
+           if %medDelay < #SYSTIME
+              {
+               event macro 13 46
+               wait 10
+               set %medDelay #SYSTIME + 10000
+              }
+          }
+   }
+return
+
+
+sub doMagery
+event macro 15 %EMNumber
+set %timeout #SYSTIME + 10000
+while fizzle notin journal || #SYSTIME < %timeout || #TARGCURS = 0
+      {
+       scanjournal 1
+      }
+while #TARGCURS = 1
+      {
+       key ESC
+      }
+return

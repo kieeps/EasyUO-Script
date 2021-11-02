@@ -1,0 +1,96 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; USER SETTINGS ;:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+set %mageryMax 930
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; STATIC SETTINGS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+set %medDelay #systime
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; LOOP ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+loop:
+gosub checkMagery
+gosub checkMana
+gosub doMagery
+goto loop
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; SUBS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sub checkMagery
+chooseSkill Mage
+if #SKILL < %mageryMax
+   {
+    if #SKILL >= 0
+       {
+        set %EMNumber 0
+        set %manaCost 4
+       }
+    if #SKILL >= 251
+       {
+        set %EMNumber 8
+        set %manaCost 6
+       }
+    if #SKILL >= 351
+       {
+        set %EMNumber 19
+        set %manaCost 9
+       }
+    if #SKILL >= 451
+       {
+        set %EMNumber 29
+        set %manaCost 11
+       }
+    if #SKILL >= 551
+       {
+        set %EMNumber 37
+        set %manaCost 14
+       }
+    if #SKILL >= 651
+       {
+        set %EMNumber 43
+        set %manaCost 20
+       }
+    if #SKILL >= 751
+       {
+        set %EMNumber 50
+        set %manaCost 40
+       }
+    if #SKILL >= 851
+       {
+        set %EMNumber 58
+        set %manaCost 50
+       }
+   }
+   else
+   {
+    halt
+   }
+return
+
+sub checkMana
+if %manaCost > #MANA
+   {
+    while #MAXMANA <> #MANA
+          {
+           if %medDelay < #SYSTIME
+              {
+               event macro 13 46
+               wait 10
+               set %medDelay #SYSTIME + 10000
+              }
+          }
+   }
+return
+
+
+sub doMagery
+event macro 15 %EMNumber
+set %timeout #SYSTIME + 3000
+repeat
+      {
+       scanjournal 1
+      }
+until fizzle in journal || #SYSTIME > %timeout || #TARGCURS = 1
+if #TARGCURS = 1
+      {
+      repeat
+      {
+       key ESC
+       wait 5
+      }
+      until #targcurs = 0
+      }
+return

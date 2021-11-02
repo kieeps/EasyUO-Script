@@ -1,0 +1,62 @@
+
+gosub setup
+loop:
+gosub waitForVic
+gosub equip
+gosub attack
+gosub waitForCorpse
+gosub unequip
+goto loop
+
+sub waitforvic
+while *killit = false
+	{
+	wait 0
+	}
+return
+
+sub equip
+finditem %lance #CHARID
+if #FINDCNT = 0
+	{
+	msg .arm 1$
+	}
+return
+
+sub attack
+event macro 52 1
+wait 10
+event macro 53
+return
+
+sub waitforcorpse
+repeat
+	{
+	finditem *corpse G_2
+	wait 5
+	}
+until #FINDCNT > 0
+set *killit false
+return
+
+sub unequip
+finditem %lance #CHARID
+if #FINDCNT	> 0
+	{
+	msg .disarm 1$
+	}
+return
+
+sub setup
+repeat
+	{
+	event macro 56
+	scanjournal 1
+	wait 10
+	}
+until on in #journal
+set *waitForKiller false
+set *killit false
+return
+
+

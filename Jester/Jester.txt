@@ -1,0 +1,155 @@
+;CONFIG
+set %instrumentType XXX ;put atleast one type here of the instrument of choise
+set %macro hiding ;put the name of the macro younwanna run while idle
+
+;DON'T TOUCH
+gosub RunOnce
+loop:
+gosub staminaCheck
+gosub scanJournal
+goto loop
+
+
+sub scanJournal
+set %iloop2 #jindex
+for %loopscan %iloop1 %iloop2
+	{
+	scanjournal %loopscan
+	if $ in #journal ;; Look for command
+		{
+		if $dex in #journal
+			{
+			msg -macro empty$
+			set %rawSpeaker #journal
+			gosub Target Get
+			msg Lets get swiftish!$
+			msg .cast 1$
+			target 10s
+			gosub Target Target
+			set %idle #SYSTIME + 120000
+			}               
+		if $ar in #journal
+			{
+			msg -macro empty$
+			set %rawSpeaker #journal
+			gosub Target Get
+			msg Lets toughen up!!$
+			msg .cast 2$
+			target 10s
+			gosub Target Target
+			set %idle #SYSTIME + 120000
+			}
+		}
+	}
+set %iloop1 #jindex
+return
+
+sub staminaCheck
+if #STAMINA < 20 && #SYSTIME > %idle
+	{
+	set %cx #CHARPOSX
+	set %cy #CHARPOSY
+	set %nx #CHARPOSX + 1
+	set %ny #CHARPOSY
+	repeat
+		{
+		move %nx %ny 0 2s
+		wait 2s
+		}
+	until #CHARPOSX = %nx && #CHARPOSY = %ny
+	set #LOBJECTID %instrumentID
+	event macro 17
+	while #STAMINA <> #MAXSTAM
+		{
+		wait 0
+		}
+	repeat
+		{
+		move %cx %cy 0 2s
+		wait 2s
+		}
+	until #CHARPOSX = %cx && #CHARPOSY = %cy
+	}
+	wait 10
+	msg -macro %macro $
+return
+
+sub Target
+if %1 = Self
+	{
+	if #TARGCURS = 1
+		{
+		repeat
+			{
+			event macro 23 0
+			}
+		until #TARGCURS = 0
+		}
+	}
+if %1 = Target
+	{
+	if #TARGCURS = 1
+		{
+		repeat
+			{
+			event macro 22 0
+			}
+		until #TARGCURS = 0
+		}
+	}
+if %1 = Get
+	{
+	set %tr 0
+	str pos %rawSpeaker :
+	set %cut #STRRES - 1
+	str left %rawSpeaker %cut
+	set %speaker #STRRES
+	repeat
+		{
+		str Pos %speaker _
+		str Ins %speaker #spc #strRes
+		set %speaker #strRes
+		str Pos %speaker _
+		str Del %speaker #strRes 1
+		set %speaker #strRes
+		}
+	until _ notIn %speaker
+	repeat
+		{
+		event macro 50 5
+		event macro 13 3
+		target
+		event macro 22
+		wait 3
+		event Property #LTARGETID
+		set %tr %tr + 1
+		}
+	until %Speaker in #property && Merchant notIn #Property || %tr >= 20
+	if %tr >= 20
+		{
+		event sysmessage Cant find target
+		}
+	set %rawSpeaker
+	}
+return
+
+sub RunOnce
+repeat
+      {
+       event macro 56
+       scanjournal 1
+       wait 1s
+      }
+until New_Targeting_System_On in #journal
+finditem %instrumentType C_ , #BACKPACKID
+if #FINDCNT > 0
+	{
+	set %instrumentID #FINDID
+	}
+	else
+	{
+	msg you need something that makes music...$
+	halt
+	}
+msg Operating...$
+return

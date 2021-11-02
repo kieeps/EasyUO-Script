@@ -1,0 +1,47 @@
+set %axeID UERXGOD
+reset:
+ignoreitem reset 1
+loop:
+finditem AHF G_2
+if #FINDCNT > 0
+	{
+	set #LOBJECTID %axeID
+	set #LTARGETID #FINDID
+	set #LTARGETKIND #FINDKIND
+	for %lj 1 2
+		{
+		set %ljindex1 #JINDEX
+		event macro 17
+		target
+		if #TARGCURS = 1
+			{
+			repeat
+				{
+				event macro 22
+				}
+			until #TARGCURS = 0
+			}
+		wait 7s
+		set %ljindex2 #JINDEX
+		for %jj %ljindex1 %ljindex2
+			{
+			scanjournal %jj
+			if too_far in #journal
+				{
+				set %lj 3
+				event sysmessage next tree
+				}
+				else
+				{
+				set %LJ 1
+				event sysmessage chop chop!
+				}
+			}
+		}
+	ignoreitem #FINDID 1
+	}
+	else
+	{
+	goto reset
+	}
+goto loop

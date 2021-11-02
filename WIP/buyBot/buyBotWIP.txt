@@ -1,0 +1,58 @@
+;;;;;;;;;;;;;;;;;;; RunOnce ;;;;;;;;;;;;;;;;;;;
+set *timer #SYSTIME
+set %mageBook
+set %ammoBook
+
+loop:
+
+gosub waitfortimer
+for %ri 1 16
+	{
+	gosub recall %ri
+	gosub approach
+	gosub buy
+	}
+goto loop
+
+sub waitfortimer
+while *timer > #SYSTIME	
+	{
+	wait 0
+	}
+set *timer #SYSTIME + 1800000
+return
+
+sub recall
+retry:
+set %cx #CHARPOSX
+set %cy #CHARPOSY
+call Runebook.txt %runebook scroll %1
+set %failsafe1 #SYSTIME - 20000 
+while #CHARPOSX = %cx && #CHARPOSY = %CY && %failsafe1 > #SYSTIME
+	{
+	wait 0
+	}
+if #CHARPOSX = %cx && #CHARPOSY %cy
+	{
+	goto retry
+	}
+return
+
+sub approach
+finditem YC G_5
+pathfind #FINDX #FINDY #FINDZ
+set %failsafe2 #SYSTIME + 10000
+while #FINDDIST	> 1 && %failsafe2 > #SYSTIME
+	{
+	finditem #FINDID
+	}
+ignoreitem #FINDID 1
+return
+
+sub buy
+msg buy$
+return
+
+
+
+	
