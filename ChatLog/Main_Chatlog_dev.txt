@@ -2,22 +2,22 @@ set %cindex #jindex
 set %je #JINDEX
 loop:
 while %cindex < #jindex
-      {
+       {
        wait 10
        set %cindex #JINDEX
        set %js %je + 1
        set %je #jindex
        for %j %js %je
-	         {
-            scanjournal %j
-	          set %cjournal #JOURNAL
-	          if #JCOLOR = 1584
-               {
-		            gosub getSpeaker
-		            gosub getMessage
-		            execute cmd.exe /c bash webhook.sh " , %speaker , " " , %text , "
-                }
-           }
+	       {
+              scanjournal %j
+	       set %cjournal #JOURNAL
+	       if #JCOLOR = 1584
+                     {
+		       gosub getSpeaker
+		       gosub getMessage
+	              execute cmd.exe /c bash webhook.sh " , %speaker , " " , %text , "
+                     }
+              }  
        }
 goto loop
 
@@ -28,13 +28,13 @@ str left %cjournal %cut
 set %speaker #STRRES
 repeat
        {
-        str Pos %speaker _
-        str Ins %speaker #spc #strRes
-        set %speaker #strRes
-        str Pos %speaker _
-        str Del %speaker #strRes 1
-        set %speaker #strRes
-        }
+       str Pos %speaker _
+       str Ins %speaker #spc #strRes
+       set %speaker #strRes
+       str Pos %speaker _
+       str Del %speaker #strRes 1
+       set %speaker #strRes
+       }
 until _ notIn %speaker
 return
 sub getMessage

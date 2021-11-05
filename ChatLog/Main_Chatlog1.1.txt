@@ -17,29 +17,30 @@ while %cindex < #jindex
 			gosub getMessage
 			execute cmd.exe /c bash webhook.sh " , %speaker , " " , %text , "
 			}
-		if You_see notIn #JOURNAL
+			if You_see notIn #JOURNAL
 			{
-			if Disa notIn #JOURNAL
-				{
-				if Tremain notIn #JOURNAL
+				if Disa notIn #JOURNAL
 					{
-					if Manda notIn #JOURNAL
+					if Tremain notIn #JOURNAL
 						{
-						if Magenta notIn #JOURNAL
+						if Manda notIn #JOURNAL
 							{
-							if sell_all notIn #JOURNAL
+							if Magenta notIn #JOURNAL
 								{
-								if #SYSMSG <> #JOURNAL
+								if sell_all notIn #JOURNAL
 									{
-									if #JCOLOR <> 1584
+									if #SYSMSG <> #JOURNAL
 										{
-										if bank notIn #JOURNAL
+										if #JCOLOR <> 1584
 											{
-											if Meditat notIn #JOURNAL
+											if bank notIn #JOURNAL
 												{
-												gosub getSpeaker
-												gosub getMessage
-												execute cmd.exe /c bash webhook_ss.sh " , %speaker , " " , %text , "
+												if Meditat notIn #JOURNAL
+													{
+													gosub getSpeaker
+													gosub getMessage
+													execute cmd.exe /c bash webhook_ss.sh " , %speaker , " " , %text , "
+													}
 												}
 											}
 										}
@@ -51,7 +52,7 @@ while %cindex < #jindex
 				}
 			}
 		}
-	}
+	}	
 goto loop
 
 sub getSpeaker
